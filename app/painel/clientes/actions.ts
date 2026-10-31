@@ -3,15 +3,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireTenant, canOperate, canManage } from "@/lib/session";
+import { digitsOnly, isValidPhone } from "@/lib/phone";
 
 const base = "/painel/clientes";
-const opt = (max: number) => z.string().trim().max(max).transform((v) => v || null).optional().transform((v) => v ?? null);
 const customerSchema = z.object({
   name: z.string().trim().min(2).max(120),
-  phone: opt(20), whatsapp: opt(20),
-  email: z.union([z.literal(""), z.email()]).transform((v) => v || null),
-  birth: z.union([z.literal(""), z.iso.date()]).transform((v) => v || null),
-  notes: opt(1000),
+  whatsapp: z.string().refine(isValidPhone).transform(digitsOnly),
 });
 
 export async function createCustomer(formData: FormData) {
@@ -21,7 +18,7 @@ export async function createCustomer(formData: FormData) {
   if (!canOperate(role)) redirect(`${base}?erro=permissao`);
   const d = parsed.data;
   const { error } = await supabase.from("customers").insert({
-    tenant_id: tenantId, full_name: d.name, phone: d.phone, whatsapp: d.whatsapp, email: d.email, birth_date: d.birth, notes: d.notes,
+    tenant_id: tenantId, full_name: d.name, phone: d.whatsapp, whatsapp: d.whatsapp,
   });
   if (error) redirect(`${base}?erro=permissao`);
   revalidatePath(base);
@@ -37,7 +34,7 @@ export async function updateCustomer(formData: FormData) {
   if (!canOperate(role)) redirect(`${back}?erro=permissao`);
   const d = parsed.data;
   const { error } = await supabase.from("customers").update({
-    full_name: d.name, phone: d.phone, whatsapp: d.whatsapp, email: d.email, birth_date: d.birth, notes: d.notes,
+    full_name: d.name, phone: d.whatsapp, whatsapp: d.whatsapp,
   }).eq("id", id).eq("tenant_id", tenantId);
   if (error) redirect(`${back}?erro=permissao`);
   revalidatePath(back);

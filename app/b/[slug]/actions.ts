@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFreeSlots } from "@/lib/availability";
+import { digitsOnly, isValidPhone } from "@/lib/phone";
 import { addDaysStr, isDateStr, todayBR } from "@/lib/time";
 
 // Agendamento público: sem login. Usa chave de servidor, mas tudo é validado e limitado à barbearia do endereço.
@@ -11,7 +12,7 @@ export async function createPublicBooking(formData: FormData) {
   const parsed = z.object({
     prof: z.uuid(), serv: z.uuid(), dia: z.string().refine(isDateStr), start: z.iso.datetime(),
     name: z.string().trim().min(2).max(120),
-    phone: z.string().transform((v) => v.replace(/\D/g, "")).refine((v) => v.length >= 10 && v.length <= 13),
+    phone: z.string().refine(isValidPhone).transform(digitsOnly),
     consent: z.literal("on"),
     website: z.string().max(0), // campo-armadilha contra robôs
   }).safeParse(Object.fromEntries(formData));
