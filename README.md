@@ -1,4 +1,4 @@
-# Barbearia 22 · SaaS de gestão (Etapas 1 e 2)
+# Barbearia 22 · SaaS de gestão (Etapas 1 a 3)
 
 Next.js 16 + TypeScript + Tailwind 4 + Supabase (Postgres, Auth, RLS).
 
@@ -12,6 +12,9 @@ Next.js 16 + TypeScript + Tailwind 4 + Supabase (Postgres, Auth, RLS).
 - Clientes: cadastro, busca com paginação, edição e histórico de agendamentos
 - Agenda: visão por dia, horários livres calculados pela jornada e pelos atendimentos ativos (revalidados no servidor), mudança de situação
 - Horários sempre em Brasília (UTC-3), mesmo com o servidor da Vercel em UTC
+- Conta: troca de senha (/painel/conta) e recuperação por e-mail (/esqueci); links de e-mail passam por /auth/callback
+- Equipe (só proprietário): convida por e-mail e define gerente ou barbeiro
+- Página pública de agendamento: /b/SEU-ENDERECO (sem login; pedidos entram como "Aguardando confirmação")
 - Testes: `npm test` (cálculo de horários livres)
 - Dados demonstrativos: tabela de preços da Barbearia 22 (`supabase/seed.sql`; durações são sugestões)
 
@@ -27,7 +30,7 @@ A chave secret só é usada em `lib/supabase/admin.ts` (servidor), no cadastro d
 ## Publicar na Vercel
 1. Suba a pasta para um repositório no GitHub e importe em vercel.com (framework Next.js é detectado sozinho).
 2. Em Settings > Environment Variables, cadastre `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY` (esta última só como variável de servidor).
-3. No Supabase, em Authentication > URL Configuration, coloque o domínio da Vercel como Site URL.
+3. No Supabase, em Authentication > URL Configuration, coloque o domínio da Vercel como Site URL e adicione `https://SEU-DOMINIO/**` em Redirect URLs (necessário para confirmação de e-mail, recuperação de senha e convites).
 
 ## Próximas etapas
-Página pública de agendamento, visão semanal da agenda e tela de equipe (papéis); depois comandas, caixa, financeiro, comissões, estoque e fidelidade; por fim campanhas, pagamento online, PWA e planos do SaaS.
+Visão semanal da agenda, avisos por WhatsApp e cadastro do perfil da barbearia (logo, endereço, horários); depois comandas, caixa, financeiro, comissões, estoque e fidelidade; por fim campanhas, pagamento online, PWA e planos do SaaS.

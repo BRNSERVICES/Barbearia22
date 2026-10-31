@@ -3,7 +3,7 @@ import { requireTenant } from "@/lib/session";
 import { logout } from "../entrar/actions";
 
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
-  const { tenant, user } = await requireTenant();
+  const { tenant, user, role } = await requireTenant();
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="border-b border-line bg-surface p-4 md:w-60 md:border-b-0 md:border-r">
@@ -14,6 +14,8 @@ export default async function PainelLayout({ children }: { children: React.React
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/clientes">Clientes</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/profissionais">Profissionais</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/servicos">Serviços</Link>
+          {role === "owner" && <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/equipe">Equipe</Link>}
+          <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/conta">Minha conta</Link>
         </nav>
         <form action={logout} className="mt-4 md:mt-8">
           <p className="mb-2 truncate text-xs text-muted">{user.email}</p>

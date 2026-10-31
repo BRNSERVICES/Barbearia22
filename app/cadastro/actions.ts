@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createBarbershop } from "@/lib/onboarding";
+import { getOrigin } from "@/lib/origin";
 
 const schema = z.object({
   shop: z.string().trim().min(2).max(120),
@@ -15,7 +16,8 @@ export async function signup(formData: FormData) {
   if (!parsed.success) redirect("/cadastro?erro=dados");
   const { shop, email, password } = parsed.data;
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const origin = await getOrigin();
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback` } });
   if (error || !data.user) redirect("/cadastro?erro=conta");
   try {
     await createBarbershop(data.user.id, shop);

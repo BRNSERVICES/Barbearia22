@@ -5,6 +5,8 @@ const erros: Record<string, string> = {
   dados: "Confira o e-mail e a senha (mínimo de 6 caracteres).",
   credenciais: "E-mail ou senha incorretos.",
   "sem-barbearia": "Sua conta ainda não está vinculada a uma barbearia.",
+  link: "Link inválido ou vencido. Peça um novo.",
+  reset: "Enviamos o link para o seu e-mail, se ele estiver cadastrado.",
   confirme: "Conta criada. Confirme seu e-mail para entrar.",
 };
 
@@ -23,7 +25,8 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
         </label>
         <button className="btn w-full" type="submit">Entrar</button>
       </form>
-      <p className="mt-6 text-sm text-muted">
+      <p className="mt-4 text-sm"><Link className="text-accent underline" href="/esqueci">Esqueci minha senha</Link></p>
+      <p className="mt-2 text-sm text-muted">
         Ainda não tem conta? <Link className="text-accent underline" href="/cadastro">Cadastre sua barbearia</Link>
       </p>
     </main>
