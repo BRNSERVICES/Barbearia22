@@ -1,3 +1,4 @@
+import { Logo } from "@/app/logo";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFreeSlots } from "@/lib/availability";
@@ -37,8 +38,8 @@ export default async function Publica({ params, searchParams }: {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
-      <p className="font-display text-xl text-accent">{tenant.name}</p>
-      <h1 className="font-display text-5xl font-extrabold leading-none">Agende seu horário</h1>
+      <Logo width={140} priority />
+      <h1 className="mt-4 font-display text-5xl font-extrabold leading-none">Agende seu horário</h1>
       {sp.erro && <p role="alert" className="mt-4 text-danger">{msgs[sp.erro] ?? msgs.falha}</p>}
 
       <form className="mt-8 space-y-4 rounded-lg border border-line bg-surface p-4">

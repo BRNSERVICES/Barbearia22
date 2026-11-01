@@ -1,3 +1,4 @@
+import { Logo } from "@/app/logo";
 import Link from "next/link";
 import { requestReset } from "./actions";
 
@@ -5,7 +6,8 @@ export default async function Esqueci({ searchParams }: { searchParams: Promise<
   const { erro, ok } = await searchParams;
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-      <h1 className="font-display text-4xl font-extrabold">Recuperar senha</h1>
+      <Logo width={140} priority />
+      <h1 className="mt-6 font-display text-4xl font-extrabold">Recuperar senha</h1>
       {erro && <p role="alert" className="mt-4 text-danger">Informe um e-mail válido.</p>}
       {ok && <p role="status" className="mt-4 text-ok">Se o e-mail estiver cadastrado, enviamos um link para criar uma nova senha. Abra no mesmo navegador.</p>}
       <form action={requestReset} className="mt-6 space-y-4">

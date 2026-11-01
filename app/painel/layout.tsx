@@ -1,3 +1,4 @@
+import { Logo } from "@/app/logo";
 import Link from "next/link";
 import { requireTenant } from "@/lib/session";
 import { logout } from "../entrar/actions";
@@ -7,7 +8,7 @@ export default async function PainelLayout({ children }: { children: React.React
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="border-b border-line bg-surface p-4 md:w-60 md:border-b-0 md:border-r">
-        <p className="font-display text-2xl font-extrabold text-accent">{tenant.name}</p>
+        <Link href="/painel" aria-label={tenant.name}><Logo width={120} priority /></Link>
         <nav className="mt-4 flex flex-wrap gap-2 md:flex-col" aria-label="Principal">
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel">Resumo</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/agenda">Agenda</Link>
