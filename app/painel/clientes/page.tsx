@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireTenant, canOperate, canManage } from "@/lib/session";
-import { formatPhone } from "@/lib/phone";
+import { formatPhone, waLink } from "@/lib/phone";
+import { getOrigin } from "@/lib/origin";
+import { bookingMessage, bookingUrl } from "@/lib/booking-link";
 import { createCustomer, deleteCustomer } from "./actions";
 
 const PAGE = 20;
@@ -13,7 +15,8 @@ const msgs: Record<string, string> = {
 export default async function Clientes({ searchParams }: { searchParams: Promise<{ q?: string; p?: string; erro?: string; ok?: string }> }) {
   const { q = "", p = "1", erro, ok } = await searchParams;
   const page = Math.max(1, Number.parseInt(p) || 1);
-  const { supabase, tenantId, role } = await requireTenant();
+  const { supabase, tenantId, role, tenant } = await requireTenant();
+  const link0 = bookingUrl(await getOrigin(), tenant.slug);
   let query = supabase.from("customers").select("id, full_name, whatsapp", { count: "exact" }).eq("tenant_id", tenantId);
   const term = q.trim().replace(/[%,()]/g, "");
   if (term) query = query.or(`full_name.ilike.%${term}%,whatsapp.ilike.%${term}%`);
@@ -48,6 +51,7 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
                 <td className="p-3 font-medium">{c.full_name}</td><td className="p-3">{formatPhone(c.whatsapp)}</td>
                 <td className="p-3"><div className="flex gap-2">
                   <Link className="btn-ghost" href={`/painel/clientes/${c.id}`}>Abrir</Link>
+                  {(() => { const l = waLink(c.whatsapp, bookingMessage(tenant.name, link0, c.full_name)); return l ? <a className="btn-ghost" href={l} target="_blank" rel="noopener noreferrer">Enviar link</a> : null; })()}
                   {canManage(role) && (
                     <details className="relative">
                       <summary className="btn-ghost cursor-pointer list-none text-danger">Excluir</summary>

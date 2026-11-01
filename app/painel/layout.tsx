@@ -21,6 +21,7 @@ export default async function PainelLayout({ children }: { children: React.React
             {pend > 0 && <span className="rounded-full bg-accent px-2 text-xs font-bold text-accentink" aria-label={`${pend} pedidos aguardando confirmação`}>{pend}</span>}
           </Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/clientes">Clientes</Link>
+          <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/divulgacao">Divulgação</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/profissionais">Profissionais</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/servicos">Serviços</Link>
           {canManage(role) && <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/financeiro">Financeiro</Link>}
