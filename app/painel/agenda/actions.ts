@@ -44,8 +44,8 @@ export async function createAppointment(formData: FormData) {
   if (error || !data) redirect(back(error?.code === "23P01" ? "indisponivel" : "permissao"));
   await supabase.from("audit_logs").insert({ tenant_id: tenantId, user_id: user.id, action: "create", entity: "appointment", entity_id: data.id });
   revalidatePath("/painel/agenda");
-  // wa = id do agendamento: a tela oferece o botão de avisar o cliente no WhatsApp.
-  redirect(url(parsed.data.dia, { ok: "criado", prof, serv, vista: "dia", wa: data.id }));
+  // Volta ao início da agenda (formulário limpo, semana do atendimento). wa = id: oferece avisar o cliente no WhatsApp.
+  redirect(url(parsed.data.dia, { ok: "criado", vista: "semana", wa: data.id }));
 }
 
 export async function setAppointmentStatus(formData: FormData) {

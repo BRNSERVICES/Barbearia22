@@ -192,6 +192,12 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
                     <button className="btn" type="submit">Confirmar</button>
                   </form>
                 )}
+                {(a.status === "confirmed" || a.status === "in_service") && (
+                  <form action={setAppointmentStatus}>
+                    <input type="hidden" name="id" value={a.id} /><input type="hidden" name="dia" value={dia} /><input type="hidden" name="vista" value="dia" /><input type="hidden" name="status" value="completed" />
+                    <button className="btn-ghost" type="submit">Concluir</button>
+                  </form>
+                )}
                 {a.status === "confirmed" && (() => {
                   const l = waLink(a.customers?.whatsapp, confirmationMessage({ customer: a.customers?.full_name, shop: tenant.name, service: a.services?.name, professional: a.professionals?.display_name, startsAt: a.starts_at }));
                   return l ? <a className="btn-ghost" href={l} target="_blank" rel="noopener noreferrer">WhatsApp</a> : null;

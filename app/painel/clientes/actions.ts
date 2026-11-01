@@ -43,10 +43,15 @@ export async function updateCustomer(formData: FormData) {
 
 export async function deleteCustomer(formData: FormData) {
   const id = z.uuid().parse(formData.get("id"));
-  const { supabase, tenantId, role } = await requireTenant();
+  const { supabase, tenantId, role, user } = await requireTenant();
   if (!canManage(role)) redirect(`${base}?erro=permissao`);
-  const { error } = await supabase.from("customers").delete().eq("id", id).eq("tenant_id", tenantId);
-  if (error) redirect(`${base}?erro=${error.code === "23503" ? "em-uso" : "permissao"}`);
+  // Administrador pode excluir mesmo com agendamentos: o histórico do cliente é apagado junto.
+  const { data: removed, error: apErr } = await supabase.from("appointments").delete().eq("customer_id", id).eq("tenant_id", tenantId).select("id");
+  if (apErr) redirect(`${base}?erro=permissao`);
+  const { data: gone, error } = await supabase.from("customers").delete().eq("id", id).eq("tenant_id", tenantId).select("id");
+  if (error || !gone?.length) redirect(`${base}?erro=permissao`);
+  await supabase.from("audit_logs").insert({ tenant_id: tenantId, user_id: user.id, action: `delete:appointments=${removed?.length ?? 0}`, entity: "customer", entity_id: id });
   revalidatePath(base);
+  revalidatePath("/painel/agenda");
   redirect(`${base}?ok=excluido`);
 }

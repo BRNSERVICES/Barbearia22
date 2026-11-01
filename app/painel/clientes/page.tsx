@@ -7,7 +7,6 @@ const PAGE = 20;
 const msgs: Record<string, string> = {
   dados: "Informe o nome e um WhatsApp com DDD (10 a 13 números).",
   permissao: "Você não tem permissão para essa ação.",
-  "em-uso": "Esse cliente tem agendamentos e não pode ser excluído.",
   criado: "Cliente cadastrado.", excluido: "Cliente excluído.",
 };
 
@@ -19,6 +18,10 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
   const term = q.trim().replace(/[%,()]/g, "");
   if (term) query = query.or(`full_name.ilike.%${term}%,whatsapp.ilike.%${term}%`);
   const { data: rows, count } = await query.order("full_name").range((page - 1) * PAGE, page * PAGE - 1);
+  const ids = (rows ?? []).map((c) => c.id);
+  const { data: ap } = ids.length ? await supabase.from("appointments").select("customer_id").eq("tenant_id", tenantId).in("customer_id", ids) : { data: [] };
+  const apCount = new Map<string, number>();
+  for (const a of ap ?? []) apCount.set(a.customer_id, (apCount.get(a.customer_id) ?? 0) + 1);
   const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE));
   const link = (n: number) => `/painel/clientes?${new URLSearchParams({ ...(term ? { q: term } : {}), p: String(n) })}`;
   return (
@@ -45,7 +48,16 @@ export default async function Clientes({ searchParams }: { searchParams: Promise
                 <td className="p-3 font-medium">{c.full_name}</td><td className="p-3">{formatPhone(c.whatsapp)}</td>
                 <td className="p-3"><div className="flex gap-2">
                   <Link className="btn-ghost" href={`/painel/clientes/${c.id}`}>Abrir</Link>
-                  {canManage(role) && <form action={deleteCustomer}><input type="hidden" name="id" value={c.id} /><button className="btn-ghost text-danger" type="submit">Excluir</button></form>}
+                  {canManage(role) && (
+                    <details className="relative">
+                      <summary className="btn-ghost cursor-pointer list-none text-danger">Excluir</summary>
+                      <form action={deleteCustomer} className="absolute right-0 z-10 mt-1 w-64 rounded-lg border border-danger bg-surface p-3 text-sm shadow-lg">
+                        <input type="hidden" name="id" value={c.id} />
+                        <p>Excluir <strong>{c.full_name}</strong>?{(apCount.get(c.id) ?? 0) > 0 && <> Os <strong>{apCount.get(c.id)} agendamento(s)</strong> dele também serão apagados.</>} Não dá para desfazer.</p>
+                        <button className="btn mt-2 w-full" type="submit">Sim, excluir</button>
+                      </form>
+                    </details>
+                  )}
                 </div></td>
               </tr>
             ))}

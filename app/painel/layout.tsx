@@ -1,6 +1,6 @@
 import { Logo } from "@/app/logo";
 import Link from "next/link";
-import { requireTenant } from "@/lib/session";
+import { requireTenant, canManage } from "@/lib/session";
 import { NEEDS_CONFIRMATION } from "@/lib/status";
 import { dayBounds, todayBR } from "@/lib/time";
 import { logout } from "../entrar/actions";
@@ -23,6 +23,7 @@ export default async function PainelLayout({ children }: { children: React.React
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/clientes">Clientes</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/profissionais">Profissionais</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/servicos">Serviços</Link>
+          {canManage(role) && <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/financeiro">Financeiro</Link>}
           {role === "owner" && <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/equipe">Equipe</Link>}
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/conta">Minha conta</Link>
         </nav>
