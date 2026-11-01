@@ -12,3 +12,12 @@ export function formatPhone(v: string | null) {
   if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
   return v;
 }
+
+// Link wa.me com a mensagem já escrita. Aceita número com ou sem 55; devolve null se não houver número válido.
+export function waLink(phone: string | null | undefined, text: string) {
+  if (!phone) return null;
+  let d = digitsOnly(phone);
+  if (d.length < 10) return null;
+  if (d.length <= 11) d = `55${d}`;
+  return `https://wa.me/${d}?text=${encodeURIComponent(text)}`;
+}

@@ -1,17 +1,25 @@
 import { Logo } from "@/app/logo";
 import Link from "next/link";
 import { requireTenant } from "@/lib/session";
+import { NEEDS_CONFIRMATION } from "@/lib/status";
+import { dayBounds, todayBR } from "@/lib/time";
 import { logout } from "../entrar/actions";
 
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
-  const { tenant, user, role } = await requireTenant();
+  const { tenant, user, role, supabase, tenantId } = await requireTenant();
+  const { count } = await supabase.from("appointments").select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId).in("status", NEEDS_CONFIRMATION).gte("starts_at", dayBounds(todayBR()).start);
+  const pend = count ?? 0;
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="border-b border-line bg-surface p-4 md:w-60 md:border-b-0 md:border-r">
         <Link href="/painel" aria-label={tenant.name}><Logo width={120} priority /></Link>
         <nav className="mt-4 flex flex-wrap gap-2 md:flex-col" aria-label="Principal">
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel">Resumo</Link>
-          <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/agenda">Agenda</Link>
+          <Link className="flex items-center justify-between rounded px-3 py-2 hover:bg-surface2" href="/painel/agenda">
+            Agenda
+            {pend > 0 && <span className="rounded-full bg-accent px-2 text-xs font-bold text-accentink" aria-label={`${pend} pedidos aguardando confirmação`}>{pend}</span>}
+          </Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/clientes">Clientes</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/profissionais">Profissionais</Link>
           <Link className="rounded px-3 py-2 hover:bg-surface2" href="/painel/servicos">Serviços</Link>

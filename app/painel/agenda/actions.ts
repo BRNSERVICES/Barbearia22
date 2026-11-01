@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireTenant, canOperate } from "@/lib/session";
 import { getFreeSlots } from "@/lib/availability";
-import { STATUS_KEYS } from "@/lib/status";
+import { STATUS_KEYS, NEEDS_CONFIRMATION } from "@/lib/status";
 import { isDateStr } from "@/lib/time";
 
+const VISTAS = ["dia", "semana", "mes"] as const;
+const vistaOf = (v: unknown) => (VISTAS as readonly string[]).includes(String(v)) ? String(v) : "dia";
 const url = (dia: string, extra: Record<string, string> = {}) => `/painel/agenda?${new URLSearchParams({ dia, ...extra })}`;
 
 export async function createAppointment(formData: FormData) {
@@ -15,10 +17,10 @@ export async function createAppointment(formData: FormData) {
     notes: z.string().trim().max(1000).optional(),
   }).safeParse(Object.fromEntries(formData));
   const dia = String(formData.get("dia") ?? "");
-  if (!parsed.success) redirect(isDateStr(dia) ? url(dia, { erro: "dados" }) : "/painel/agenda?erro=dados");
+  if (!parsed.success) redirect(isDateStr(dia) ? url(dia, { erro: "dados", vista: "dia" }) : "/painel/agenda?erro=dados");
   const { customer, prof, serv, start, notes } = parsed.data;
   const { supabase, tenantId, role, user } = await requireTenant();
-  const back = (erro: string) => url(parsed.data.dia, { erro, prof, serv });
+  const back = (erro: string) => url(parsed.data.dia, { erro, prof, serv, vista: "dia" });
   if (!canOperate(role)) redirect(back("permissao"));
 
   const [{ data: service }, { data: link }] = await Promise.all([
@@ -42,19 +44,38 @@ export async function createAppointment(formData: FormData) {
   if (error || !data) redirect(back(error?.code === "23P01" ? "indisponivel" : "permissao"));
   await supabase.from("audit_logs").insert({ tenant_id: tenantId, user_id: user.id, action: "create", entity: "appointment", entity_id: data.id });
   revalidatePath("/painel/agenda");
-  redirect(url(parsed.data.dia, { ok: "criado", prof, serv }));
+  // wa = id do agendamento: a tela oferece o botão de avisar o cliente no WhatsApp.
+  redirect(url(parsed.data.dia, { ok: "criado", prof, serv, vista: "dia", wa: data.id }));
 }
 
 export async function setAppointmentStatus(formData: FormData) {
   const parsed = z.object({ id: z.uuid(), status: z.enum(STATUS_KEYS), dia: z.string().refine(isDateStr) }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect("/painel/agenda?erro=dados");
   const { id, status, dia } = parsed.data;
+  const vista = vistaOf(formData.get("vista"));
   const { supabase, tenantId, role, user } = await requireTenant();
-  if (!canOperate(role)) redirect(url(dia, { erro: "permissao" }));
+  if (!canOperate(role)) redirect(url(dia, { erro: "permissao", vista }));
   const { error } = await supabase.from("appointments").update({ status }).eq("id", id).eq("tenant_id", tenantId);
   // Reativar um atendimento cancelado pode conflitar com outro marcado no mesmo horário.
-  if (error) redirect(url(dia, { erro: error.code === "23P01" ? "indisponivel" : "permissao" }));
+  if (error) redirect(url(dia, { erro: error.code === "23P01" ? "indisponivel" : "permissao", vista }));
   await supabase.from("audit_logs").insert({ tenant_id: tenantId, user_id: user.id, action: `status:${status}`, entity: "appointment", entity_id: id });
   revalidatePath("/painel/agenda");
-  redirect(url(dia, { ok: "status" }));
+  redirect(url(dia, status === "confirmed" ? { ok: "confirmado", wa: id, vista } : { ok: "status", vista }));
+}
+
+// Confirma um pedido pendente. Só age se ele ainda estiver aguardando (evita confirmar duas vezes).
+export async function confirmAppointment(formData: FormData) {
+  const parsed = z.object({ id: z.uuid(), dia: z.string().refine(isDateStr) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) redirect("/painel/agenda?erro=dados");
+  const { id, dia } = parsed.data;
+  const vista = vistaOf(formData.get("vista"));
+  const { supabase, tenantId, role, user } = await requireTenant();
+  if (!canOperate(role)) redirect(url(dia, { erro: "permissao", vista }));
+  const { data, error } = await supabase.from("appointments").update({ status: "confirmed" })
+    .eq("id", id).eq("tenant_id", tenantId).in("status", NEEDS_CONFIRMATION).select("id");
+  if (error) redirect(url(dia, { erro: error.code === "23P01" ? "indisponivel" : "permissao", vista }));
+  if (!data?.length) redirect(url(dia, { erro: "ja-tratado", vista }));
+  await supabase.from("audit_logs").insert({ tenant_id: tenantId, user_id: user.id, action: "status:confirmed", entity: "appointment", entity_id: id });
+  revalidatePath("/painel/agenda");
+  redirect(url(dia, { ok: "confirmado", wa: id, vista }));
 }

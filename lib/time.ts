@@ -22,3 +22,15 @@ export const fmtDateLong = (date: string) =>
 export const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString("pt-BR", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 export const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+export const dateBR = (iso: string) => ymd.format(new Date(iso));
+export const WEEKDAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+export const dayNum = (date: string) => Number(date.slice(8, 10));
+export const fmtShort = (date: string) => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
+export const monthStart = (date: string) => `${date.slice(0, 8)}01`;
+export const addMonths = (date: string, n: number) => {
+  const d = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1 + n, 1, 12));
+  return d.toISOString().slice(0, 8) + "01";
+};
+export const fmtMonth = (date: string) =>
+  new Date(`${monthStart(date)}T12:00:00${OFFSET}`).toLocaleDateString("pt-BR", { timeZone: TZ, month: "long", year: "numeric" });
